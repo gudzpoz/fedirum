@@ -18,8 +18,8 @@ class Send {
     }
 
     function __construct() {
-        $this->privateKey = file_get_contents(__DIR__ . '/private.pem');
-        $this->publicKey = file_get_contents(__DIR__ . '/public.pem');
+        $this->privateKey = file_get_contents(__DIR__ . Config::PRIVATE_PEM);
+        $this->publicKey = file_get_contents(__DIR__ . Config::PUBLIC_PEM);
     }
 
     public function getPublicKey() {

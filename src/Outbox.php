@@ -12,7 +12,7 @@ use GuzzleHttp\Psr7;
 use GuzzleHttp\Psr7\Request as GHRequest;
 use GuzzleHttp\Exception\RequestException;
 
-class Outbox extends Actor {
+class Outbox extends Actor implements RequestHandlerInterface {
     public static function getOutboxLink() {
         return Actor::getBaseLink() . Config::OUTBOX_PATH;
     }

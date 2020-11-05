@@ -32,7 +32,7 @@ class Actor implements MiddlewareInterface {
 
     private function getActorResponse($username): Response
     {
-        $send = new HelloWorldSend();
+        $send = new Send();
         $data = array(
             '@context' => array(
                 'https://www.w3.org/ns/activitystreams',
@@ -71,7 +71,7 @@ class Actor implements MiddlewareInterface {
     public function process(Request $request, RequestHandlerInterface $handler): Response {
         $currentRoute = $request->getUri()->getPath();
 
-        $userRoute = '/u/';
+        $userRoute = Config::ACTOR_PATH;
         if($this->isActivityRequest($request)) {
             if (substr($currentRoute, 0, strlen($userRoute)) === $userRoute) {
                 $username = substr($currentRoute, strlen($userRoute));

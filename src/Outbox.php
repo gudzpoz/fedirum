@@ -35,25 +35,28 @@ class Outbox extends Actor implements RequestHandlerInterface {
 
     public function handle(Request $request): Response
     {
-        $content = <<<EOD
-{
-    "@context": "https://www.w3.org/ns/activitystreams",
-    "id": "https://lemmy.exopla.net.eu.org/create-hello-world",
-    "type": "Create",
-    "actor": "https://lemmy.exopla.net.eu.org/fedirum/user/alien",
-    "object": {
-        "id": "https://lemmy.exopla.net.eu.org/hello-world",
-        "type": "Note",
-        "published": "2018-06-23T17:17:11Z",
-        "attributedTo": "https://lemmy.exopla.net.eu.org/fedirum/user/alien",
-        "inReplyTo": "https://mastodon.social/@Gargron/100254678717223630",
-        "content": "<p>testing... (sorry for disturbing and thank you for the tutorial :P )</p>",
-        "to": "https://www.w3.org/ns/activitystreams#Public"
-    }
-}
-EOD;
-        $send = new Send();
-        $send->send($user, $content, 'https://mastodon.social/inbox');
+        $content = json_encode([
+            '@content' => 'https://www.w3.org/ns/activitystreams',
+            'id' => 'https://lemmy.exopla.net.eu.org/create/d/1-change-my-view',
+            'type' => 'Create',
+            'actor': Actor::getActorLink('alie'),
+            'object' => [
+                'id' => 'https://lemmy.exopla.net.eu.org/d/1-change-my-view',
+                'type' => 'Note',
+                'published' => '2020-11-01T17:17:11Z',
+                'attributedTo' => Actor::getActorLink('alie'),
+                'content' => '<p>testing... from a little flarum site</p>',
+                'to' => 'https://www.w3.org/ns/activitystreams#Public'
+            ]
+        ]);
+
+        $user = $this->getInfo('alie');
+        $send = new Send();        
+        if($user) {
+            foreach(Followship::where('id', $user->id)->get() as $ship) {
+                $send->send('alie', $content, $ship->inbox);
+            }
+        }
         return new HtmlResponse('<h1>Access denied.</h1>', 403);
     }
 }

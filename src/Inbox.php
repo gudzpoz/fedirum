@@ -79,7 +79,7 @@ class Inbox extends Actor implements RequestHandlerInterface {
                             '@content' => 'https://www.w3.org/ns/activitystreams',
                             'actor' => $object,
                             'type' => 'Accept',
-                            'object' => $id
+                            'object' => $json
                         ]);
 
                         $sender->post($name, $content, $ship->inbox);

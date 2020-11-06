@@ -35,7 +35,7 @@ class Actor implements MiddlewareInterface {
         $this->user = $this->users->findByIdentification($username);
         return $this->user;
     }
-    protected function getActorLink($username): string {
+    public static function getActorLink($username): string {
         return Actor::getBaseLink() . Config::ACTOR_PATH . $username;
     }
 
@@ -52,10 +52,10 @@ class Actor implements MiddlewareInterface {
             'preferredUsername' => $username,
             'inbox' => Inbox::getInboxLink(),
             'outbox' => Outbox::getOutboxLink(),
-            'url' => $this->getActorLink($username),
+            'url' => self::getActorLink($username),
             'publicKey' => array(
-                'id' => $this->getActorLink($username) . '#main-key',
-                'owner' => $this->getActorLink($username),
+                'id' => self::getActorLink($username) . '#main-key',
+                'owner' => self::getActorLink($username),
                 'publicKeyPem' => $send->getPublicKey()
             )
         );

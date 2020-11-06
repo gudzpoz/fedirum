@@ -35,26 +35,28 @@ class Outbox extends Actor implements RequestHandlerInterface {
 
     public function handle(Request $request): Response
     {
-        $content = json_encode([
+        $content = [
             '@content' => 'https://www.w3.org/ns/activitystreams',
             'id' => 'https://lemmy.exopla.net.eu.org/create/d/1-change-my-view',
             'type' => 'Create',
-            'actor': Actor::getActorLink('alie'),
+            'actor' => Actor::getActorLink('alie'),
             'object' => [
                 'id' => 'https://lemmy.exopla.net.eu.org/d/1-change-my-view',
                 'type' => 'Note',
                 'published' => '2020-11-01T17:17:11Z',
                 'attributedTo' => Actor::getActorLink('alie'),
                 'content' => '<p>testing... from a little flarum site</p>',
-                'to' => 'https://www.w3.org/ns/activitystreams#Public'
+                'to' => ['https://www.w3.org/ns/activitystreams#Public']
             ]
-        ]);
+        ];
 
         $user = $this->getInfo('alie');
         $send = new Send();        
         if($user) {
             foreach(Followship::where('id', $user->id)->get() as $ship) {
-                $send->send('alie', $content, $ship->inbox);
+                $content['object']['to'][] = $ship->follower;
+                $response = $send->send('alie', $content, $ship->inbox);
+                error_log($response->getBody());
             }
         }
         return new HtmlResponse('<h1>Access denied.</h1>', 403);

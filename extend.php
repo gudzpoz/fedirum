@@ -21,7 +21,7 @@ return [
     (new Extend\Routes('forum'))
         ->post(Config::INBOX_PATH, 'fedirum.inbox', Inbox::class),
     (new Extend\Routes('forum'))
-        ->get(Config::OUTBOX_PATH, 'fedirum.outbox', Outbox::class),
+        ->get(Config::OUTBOX_PATH . '/testpath', 'fedirum.outbox', Outbox::class),
     (new Extend\Event())
         ->listen(Posted::class, Post::class),
     (new Extend\Middleware('forum'))->add(Actor::class)

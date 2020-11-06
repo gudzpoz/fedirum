@@ -57,7 +57,7 @@ class Inbox extends Actor implements RequestHandlerInterface {
                     if($user) {
                         $ship->id = $user->id;
                         $oldShip = Followship::where('id', $ship->id)
-                            ->('follower', $ship->follower)
+                            ->where('follower', $ship->follower)
                             ->first();
                         if($oldShip) {
                             $oldShip->inbox = '';
@@ -65,6 +65,8 @@ class Inbox extends Actor implements RequestHandlerInterface {
                             $ship->inbox = '';
                             $ship->save();
                         }
+                        $response = new Send()->get($ship->follower);
+                        error_log(json_decode($response->getBody())->inbox);
                         return new JsonResponse([
                             'type' => 'Accept',
                             'object' => $id

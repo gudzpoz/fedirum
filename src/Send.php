@@ -27,7 +27,7 @@ class Send {
         return $this->publicKey;
     }
 
-    public function send($user, $content, $inbox): Request {
+    public function post($user, $content, $inbox): Response {
         $host = parse_url($inbox, PHP_URL_HOST);
         
         $date = gmdate('D, d M Y H:i:s \G\M\T', time());
@@ -48,6 +48,21 @@ class Send {
             'timeout' => 2.0
         ));
         error_log($content);
-        #$response = $client->send($request);
+        return $client->send($request);
+    }
+
+    public function get($link): Response {
+        $host = parse_url($link, PHP_URL_HOST);
+        $request = new Request('GET', $link, array(
+            'Host' => $host,
+            'Accept' => 'application/activity+json'
+        ), '');
+        
+        $client = new Client(array(
+            # This base_uri won't bother.
+            'base_uri' => 'https://mastodon.social',
+            'timeout' => 2.0
+        ));
+        return $client->send($request);
     }
 }

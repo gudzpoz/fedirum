@@ -81,8 +81,8 @@ class Inbox extends Actor implements RequestHandlerInterface {
                             'type' => 'Accept',
                             'object' => $id
                         ]);
-                        # TODO: Implement requist verification before Accept
-                        # $sender->post($name, $content, $ship->inbox);
+
+                        $sender->post($name, $content, $ship->inbox);
                         error_log($content);
                         return new JsonResponse([
                             'type' => 'Accept',

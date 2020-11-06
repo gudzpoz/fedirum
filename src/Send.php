@@ -8,9 +8,6 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
-use ActivityPhp\Server;
-use ActivityPhp\Server\Http\HttpSignature;
-use Symfony\Component\HttpFoundation\Request;
 
 class Send {
     private $privateKey;
@@ -32,10 +29,18 @@ class Send {
     }
 
     public function verify(ServerRequestInterface $request) {
-        $server = new Server();
-        $httpSignature = new HttpSignature($server);
-        $symfonyRequest = Request::createFromGlobals();
-        error_log('Verification result: ' . var_export($httpSignature->verify($symfonyRequest), TRUE));
+        $headers = $request->getHeaders();
+        $signature = $headers['signature'];
+        $fields = [];
+        if($signature) {
+            foreach(explode(',', $signature) as $field) {
+                $pair = explode('=', $field);
+                if(count($pair) == 2) {
+                    $fields[$pair[0]] = trim($pair[1], ' "');
+                }
+            }
+            error_log(var_export($fields, TRUE));
+        }
         return false;
     }
 

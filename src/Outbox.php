@@ -52,7 +52,6 @@ class Outbox extends Actor implements RequestHandlerInterface {
     }
 }
 EOD;
-        $user = $request->getQueryParams()['user'];
         $send = new Send();
         $send->send($user, $content, 'https://mastodon.social/inbox');
         return new HtmlResponse('<h1>Access denied.</h1>', 403);

@@ -47,7 +47,31 @@ class Inbox extends Actor implements RequestHandlerInterface {
         }
 
         if($json->type === 'Follow') {
-            
+            if($object && $actor && is_string($id)) {
+                $ship = new Followship();
+                $ship->follower = $actor;
+
+                $name = Actor::getUserName($object);
+                if($name) {
+                    $user = $this->getInfo($name);
+                    if($user) {
+                        $ship->id = $user->id;
+                        $oldShip = Followship::where('id', $ship->id)
+                            ->('follower', $ship->follower)
+                            ->first();
+                        if($oldShip) {
+                            $oldShip->inbox = '';
+                        } else {
+                            $ship->inbox = '';
+                            $ship->save();
+                        }
+                        return new JsonResponse([
+                            'type' => 'Accept',
+                            'object' => $id
+                        ]);
+                    }
+                }
+            }
         }
         return new HtmlResponse('<h1>Access denied .</h1>', 403);
     }

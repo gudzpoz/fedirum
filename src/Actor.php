@@ -16,6 +16,15 @@ class Actor implements MiddlewareInterface {
     public static function getBaseLink(): string {
         return 'https://' . $_SERVER['SERVER_NAME'];
     }
+    public static function getUserName(string $link): ?string {
+        $path = parse_url($link, PHP_URL_PATH);
+        $pos = strrpos($path, '/');
+        if($pos !== false) {
+            return substr($path, $pos + 1);
+        } else {
+            return null;
+        }
+    }
     
     private $user;
     protected $users;

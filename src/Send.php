@@ -29,7 +29,7 @@ class Send {
     }
 
     public function retrievePublicKey($keyId) {
-        $json = json_decode($this->get($actor));
+        $json = json_decode($this->get($keyId));
         $publicKey = $json['publicKey'];
         if($publicKey['id'] == $keyId) {
             return $publicKey['publicKeyPem'];
@@ -60,11 +60,20 @@ class Send {
                 if($key == '(request-target)') {
                     $signs[] = '(request-target): post ' . Config::INBOX_PATH;
                 } else {
-                    $signs[] = $headers[$key];
+                    if($key == 'host' && !$headers[$key]) {
+                        $signs[] = $_SERVER['SERVER_NAME'];
+                    } else {
+                        if(is_array($headers[$key])) {
+                            $signs[] = $headers[$key][0];
+                        } else {
+                            $signs[] = $headers[$key];
+                        }
+                    }
                 }
             }
             $sign = implode("\n", $signs);
 
+            error_log($sign);            
             $publicKey = $this->retrievePublicKey($fields['keyId']);
             # TODO: use dynamic algorithms depending on $fields['algorithm']
             $ok = openssl_verify($sign, base64_decode($fields['signature']), $publicKey, "sha256WithRSAEncryption");

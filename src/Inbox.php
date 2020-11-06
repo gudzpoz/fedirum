@@ -32,8 +32,23 @@ class Inbox extends Actor implements RequestHandlerInterface {
 
     public function handle(Request $request): Response
     {
-        $user = $request->getQueryParams()['user'];
         error_log($request->getBody());
+        $json = json_decode($request->getBody());
+        $actor = null;
+        if(is_string($json->actor)) {
+            $actor = $json->actor;
+        } else if(is_object($json->actor)) {
+            $actor = $json->actor->id;
+        }
+        $id = $json->id;
+        $object = null;
+        if(is_string($json->object)) {
+            $object = $json->object;
+        }
+
+        if($json->type === 'Follow') {
+            
+        }
         return new HtmlResponse('<h1>Access denied .</h1>', 403);
     }
 }

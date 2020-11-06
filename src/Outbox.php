@@ -7,7 +7,6 @@ use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface;
-use GuzzleHttp\Client;
 use GuzzleHttp\Psr7;
 use GuzzleHttp\Psr7\Request as GHRequest;
 use GuzzleHttp\Exception\RequestException;
@@ -55,17 +54,7 @@ class Outbox extends Actor implements RequestHandlerInterface {
 EOD;
         $user = $request->getQueryParams()['user'];
         $send = new Send();
-        $client = new Client(array(
-            'base_uri' => 'https://mastodon.social',
-            'timeout' => 2.0
-        ));
-        $fediRequest = $send->send($user, $content, 'https://mastodon.social/inbox');
-        $response = null;
-        try {
-            $response = $client->send($fediRequest);
-        } catch(RequestException $e) {
-            return new HtmlResponse('<h1>Access to ' . $user . '\'s outbox denied.</h1>' . Psr7\Message::toString($e->getResponse()) . Psr7\Message::toString($e->getRequest()), 403);
-        }
-        return new HtmlResponse('<h1>Access to ' . $user . '\'s outbox denied.</h1>' . Psr7\Message::toString($response), 403);
+        $send->send($user, $content, 'https://mastodon.social/inbox');
+        return new HtmlResponse('<h1>Access denied.</h1>', 403);
     }
 }

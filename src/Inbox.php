@@ -56,7 +56,7 @@ class Inbox extends Actor implements RequestHandlerInterface {
                     $user = $this->getInfo($name);
                     if($user) {
                         $sender = new Send();
-                        if(!$sender->verify(request)) {
+                        if(!$sender->verify($request)) {
                             return new HtmlResponse('<h1>Illegal Authentication.</h1>');
                         }
                         

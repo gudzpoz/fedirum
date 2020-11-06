@@ -10,6 +10,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use ActivityPhp\Server;
 use ActivityPhp\Server\Http\HttpSignature;
+use Symfony\Component\HttpFoundation\Request;
 
 class Send {
     private $privateKey;
@@ -33,7 +34,8 @@ class Send {
     public function verify(ServerRequestInterface $request) {
         $server = new Server();
         $httpSignature = new HttpSignature($server);
-        error_log('Verification result: ' . var_export($httpSignature->verify($request), TRUE));
+        $symfonyRequest = Request::createFromGlobals();
+        error_log('Verification result: ' . var_export($httpSignature->verify($symfonyRequest), TRUE));
         return false;
     }
 

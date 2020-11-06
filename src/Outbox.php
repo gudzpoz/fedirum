@@ -55,7 +55,7 @@ class Outbox extends Actor implements RequestHandlerInterface {
         if($user) {
             foreach(Followship::where('id', $user->id)->get() as $ship) {
                 $content['object']['to'][] = $ship->follower;
-                $response = $send->send('alie', $content, $ship->inbox);
+                $response = $send->post('alie', json_encode($content), $ship->inbox);
                 error_log($response->getBody());
             }
         }

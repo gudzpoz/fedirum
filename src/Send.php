@@ -8,6 +8,8 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
+use ActivityPhp\Server;
+use ActivityPhp\Server\Http\HttpSignature;
 
 class Send {
     private $privateKey;
@@ -29,7 +31,9 @@ class Send {
     }
 
     public function verify(ServerRequestInterface $request) {
-        error_log(var_export($request->getHeaders(), TRUE));
+        $server = new Server();
+        $httpSignature = new HttpSignature($server);
+        error_log('Verification result: ' . var_export($httpSignature->verify($request), TRUE));
         return false;
     }
 

@@ -5,6 +5,7 @@ namespace Fedirum\Fedirum;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 
@@ -25,6 +26,11 @@ class Send {
 
     public function getPublicKey() {
         return $this->publicKey;
+    }
+
+    public function verify(ServerRequestInterface $request) {
+        error_log(var_export($request->getHeaders(), TRUE));
+        return false;
     }
 
     public function post($user, $content, $inbox): Response {

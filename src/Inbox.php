@@ -55,18 +55,35 @@ class Inbox extends Actor implements RequestHandlerInterface {
                 if($name) {
                     $user = $this->getInfo($name);
                     if($user) {
+                        $sender = new Send();
+                        if(!$sender->verify(request)) {
+                            return new HtmlResponse('<h1>Illegal Authentication.</h1>');
+                        }
+                        
                         $ship->id = $user->id;
                         $oldShip = Followship::where('id', $ship->id)
                             ->where('follower', $ship->follower)
                             ->first();
+                        $response = $sender->get($ship->follower);
+                        $inbox = json_decode($response->getBody())->inbox;
+                        if(is_string($inbox)) {
+                            $ship->inbox = $inbox;
+                        }
                         if($oldShip) {
-                            $oldShip->inbox = '';
+                            $oldShip->inbox = $ship->inbox;
+                            $oldShip->save();
                         } else {
-                            $ship->inbox = '';
                             $ship->save();
                         }
-                        $response = new Send()->get($ship->follower);
-                        error_log(json_decode($response->getBody())->inbox);
+                        $content = json_encode([
+                            '@content' => 'https://www.w3.org/ns/activitystreams',
+                            'actor' => $object,
+                            'type' => 'Accept',
+                            'object' => $id
+                        ]);
+                        # TODO: Implement requist verification before Accept
+                        # $sender->post($name, $content, $ship->inbox);
+                        error_log($content);
                         return new JsonResponse([
                             'type' => 'Accept',
                             'object' => $id

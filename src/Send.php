@@ -30,9 +30,9 @@ class Send {
 
     public function retrievePublicKey($keyId) {
         $json = json_decode($this->get($keyId)->getBody());
-        $publicKey = $json['publicKey'];
-        if($publicKey['id'] == $keyId) {
-            return $publicKey['publicKeyPem'];
+        $publicKey = $json->publicKey;
+        if($publicKey->id == $keyId) {
+            return $publicKey->publicKeyPem;
         } else {
             error_log('owner not match');
             return null;
@@ -73,12 +73,15 @@ class Send {
             }
             $sign = implode("\n", $signs);
 
-            error_log($sign);            
             $publicKey = $this->retrievePublicKey($fields['keyId']);
-            error_log($publicKey);
-            # TODO: use dynamic algorithms depending on $fields['algorithm']
-            $ok = openssl_verify($sign, base64_decode($fields['signature']), $publicKey, "sha256WithRSAEncryption");
-            error_log('Verification: ' . $ok);
+            if($publicKey) {
+                # TODO: use dynamic algorithms depending on $fields['algorithm']
+                $ok = openssl_verify($sign, base64_decode($fields['signature']), $publicKey, "sha256WithRSAEncryption");
+                error_log('Verification: ' . $ok);
+                return $ok;
+            } else {
+                return false;
+            }
         }
         return false;
     }

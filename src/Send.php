@@ -28,18 +28,47 @@ class Send {
         return $this->publicKey;
     }
 
+    public function retrievePublicKey($keyId) {
+        $json = json_decode($this->get($actor));
+        $publicKey = $json['publicKey'];
+        if($publicKey['id'] == $keyId) {
+            return $publicKey['publicKeyPem'];
+        } else {
+            error_log('owner not match');
+            return null;
+        }
+    }
+
     public function verify(ServerRequestInterface $request) {
         $headers = $request->getHeaders();
-        $signature = $headers['signature'];
+        $signature = $headers['signature'][0];
         $fields = [];
         if($signature) {
             foreach(explode(',', $signature) as $field) {
-                $pair = explode('=', $field);
+                $pair = explode('=', $field, 2);
                 if(count($pair) == 2) {
                     $fields[$pair[0]] = trim($pair[1], ' "');
                 }
             }
             error_log(var_export($fields, TRUE));
+            if(!array_key_exists('headers', $fields)) {
+                $fields['headers'] = 'date';
+            }
+
+            $signs = [];
+            foreach(explode(' ', $fields['headers']) as $key) {
+                if($key == '(request-target)') {
+                    $signs[] = '(request-target): post ' . Config::INBOX_PATH;
+                } else {
+                    $signs[] = $headers[$key];
+                }
+            }
+            $sign = implode("\n", $signs);
+
+            $publicKey = $this->retrievePublicKey($fields['keyId']);
+            # TODO: use dynamic algorithms depending on $fields['algorithm']
+            $ok = openssl_verify($sign, base64_decode($fields['signature']), $publicKey, "sha256WithRSAEncryption");
+            error_log('Verification: ' . $ok);
         }
         return false;
     }

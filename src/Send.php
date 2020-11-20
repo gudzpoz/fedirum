@@ -91,26 +91,26 @@ class Send {
         $path = parse_url($inbox, PHP_URL_PATH);
         
         $date = gmdate('D, d M Y H:i:s \G\M\T', time());
-        $digest = 'sha-256=' . base64_encode(openssl_digest($content, "sha256", TRUE));
+        $digest = 'SHA-256=' . base64_encode(openssl_digest($content, "sha256", TRUE));
         $sign = "(request-target): post " . $path . "\nhost: " . $host . "\ndate: " . $date . "\ndigest: " . $digest;
         openssl_sign($sign, $binary_signature, $this->privateKey, OPENSSL_ALGO_SHA256);
         $signature = base64_encode($binary_signature);
-        $header = 'keyId="' . $this->getActorLink($user) . '",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="' . $signature . '"';
+        $header = 'keyId="' . $this->getActorLink($user) . '#main-key'. '",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="' . $signature . '"';
         $request = new Request('POST', $inbox, array(
             'Host' => $host,
             'Date' => $date,
             'Signature' => $header,
             'Digest' => $digest,
-            'Accept' => 'application/activity+json'
+            'Accept' => 'application/activity+json',
+            'Content-Type' => 'application/activity+json'
         ), $content);
         
         $client = new Client(array(
             # This base_uri won't bother.
             'base_uri' => 'https://mastodon.social',
-            'timeout' => 5.0,
+            'timeout' => 10.0,
             'http_errors' => false
         ));
-        error_log($content);
         return $client->send($request);
     }
 
@@ -118,13 +118,15 @@ class Send {
         $host = parse_url($link, PHP_URL_HOST);
         $request = new Request('GET', $link, array(
             'Host' => $host,
-            'Accept' => 'application/activity+json'
+            'Accept' => 'application/activity+json',
+            'Content-Type' => 'application/activity+json'
         ), '');
         
         $client = new Client(array(
             # This base_uri won't bother.
             'base_uri' => 'https://mastodon.social',
-            'timeout' => 5.0
+            'timeout' => 10.0,
+            'http_errors' => false
         ));
         return $client->send($request);
     }

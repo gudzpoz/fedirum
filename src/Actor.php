@@ -38,6 +38,9 @@ class Actor implements MiddlewareInterface {
     public static function getActorLink($username): string {
         return Actor::getBaseLink() . Config::ACTOR_PATH . $username;
     }
+    public static function getFollowersLink($username): string {
+        return $this->getActorLink($username) . '/followers';
+    }
 
     private function getActorResponse($username): Response
     {
@@ -45,13 +48,14 @@ class Actor implements MiddlewareInterface {
         $data = array(
             '@context' => array(
                 'https://www.w3.org/ns/activitystreams',
-                'https://w3id.org/security/v1'
             ),
             'id' => $this->getActorLink($username),
+            'actor' => $this->getActorLink($username),
             'type' => 'Person',
             'preferredUsername' => $username,
             'inbox' => Inbox::getInboxLink(),
             'outbox' => Outbox::getOutboxLink(),
+            'followers' => getFollowersLink($username),
             'url' => self::getActorLink($username),
             'publicKey' => array(
                 'id' => self::getActorLink($username) . '#main-key',
@@ -59,7 +63,9 @@ class Actor implements MiddlewareInterface {
                 'publicKeyPem' => $send->getPublicKey()
             )
         );
-        return new JsonResponse($data);
+        return new JsonResponse($data, 200, [
+            'Content-Type' => ['application/activity+json'],
+        ]);
     }
 
     protected function isActivityRequest(Request $request) {
@@ -67,6 +73,7 @@ class Actor implements MiddlewareInterface {
         if($headers && array_key_exists('accept', $headers)) {
             foreach($headers['accept'] as $accept) {
                 if(strpos($accept, 'application/activity+json') !== false
+                   || strpos($accept, 'application/json') !== false
                    || strpos($accept, 'application/ld+json; profile="https://www.w3.org/ns/activitystreams') !== false
                    || strpos($accept, 'application/ld+json') !== false) {
                     return TRUE;
@@ -81,12 +88,21 @@ class Actor implements MiddlewareInterface {
         $currentRoute = $request->getUri()->getPath();
 
         $userRoute = Config::ACTOR_PATH;
-        if($this->isActivityRequest($request)) {
-            if (substr($currentRoute, 0, strlen($userRoute)) === $userRoute) {
-                $username = substr($currentRoute, strlen($userRoute));
-                if(strpos($username, "/") === false && $this->getInfo($username)) {
-                    return $this->getActorResponse($username);
-                }
+        if (substr($currentRoute, 0, strlen($userRoute)) === $userRoute) {
+            $username = substr($currentRoute, strlen($userRoute));
+            if(strpos($username, "/") === false && $this->getInfo($username)) {
+                return $this->getActorResponse($username);
+            } else if(strpos($username, 'followers')) {
+                return new JsonResponse([
+                    "@context" => "https://www.w3.org/ns/activitystreams",
+                    "attributedTo" => substr($currentRoute, 0, strlen($currentRoute) - strlen('/followers')),
+                    "id" => $currentRoute,
+                    "orderedItems" => [],
+                    "totalItems" => 0,
+                    "type" => "OrderedCollection"
+                ], 200, [
+                    'Content-Type' => ['application/activity+json'],
+                ]);
             }
         }
         return $handler->handle($request);

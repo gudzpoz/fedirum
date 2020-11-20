@@ -36,17 +36,21 @@ class Outbox extends Actor implements RequestHandlerInterface {
     public function handle(Request $request): Response
     {
         $content = [
-            '@content' => 'https://www.w3.org/ns/activitystreams',
-            'id' => 'https://lemmy.exopla.net.eu.org/create/d/1-change-my-view',
+            '@context' => 'https://www.w3.org/ns/activitystreams',
+            'id' => 'https://lemmy.exopla.net.eu.org/create/d/1-change-my-view?created-' . gmdate('Y-m-d\TH:i:s\Z'),
             'type' => 'Create',
+                 'to' => [Actor::getActorLink('alie') . '/followers'],
+                'cc' => ['https://www.w3.org/ns/activitystreams#Public'],
             'actor' => Actor::getActorLink('alie'),
             'object' => [
-                'id' => 'https://lemmy.exopla.net.eu.org/d/1-change-my-view',
+                'id' => 'https://lemmy.exopla.net.eu.org/d/1-change-my-view?' . gmdate('Y-m-d\TH:i:s\Z'),
+                'url' => 'https://lemmy.exopla.net.eu.org/d/1-change-my-view?' . gmdate('Y-m-d\TH:i:s\Z'),
                 'type' => 'Note',
-                'published' => '2020-11-01T17:17:11Z',
+                'published' => gmdate('Y-m-d\TH:i:s\Z'),
                 'attributedTo' => Actor::getActorLink('alie'),
-                'content' => '<p>testing... from a little flarum site</p>',
-                'to' => ['https://www.w3.org/ns/activitystreams#Public']
+                'content' => '<p>Life, what is it but a dream?</p>',
+                'to' => [Actor::getActorLink('alie') . '/followers'],
+                'cc' => ['https://www.w3.org/ns/activitystreams#Public']
             ]
         ];
 
@@ -54,9 +58,7 @@ class Outbox extends Actor implements RequestHandlerInterface {
         $send = new Send();        
         if($user) {
             foreach(Followship::where('id', $user->id)->get() as $ship) {
-                $content['object']['to'][] = $ship->follower;
                 $response = $send->post('alie', json_encode($content), $ship->inbox);
-                error_log($response->getBody());
             }
         }
         return new HtmlResponse('<h1>Access denied.</h1>', 403);

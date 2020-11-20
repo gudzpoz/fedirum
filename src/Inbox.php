@@ -7,6 +7,7 @@ use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface;
+use GuzzleHttp\Psr7;
 
 class Inbox extends Actor implements RequestHandlerInterface {
     public static function getInboxLink() {
@@ -32,8 +33,8 @@ class Inbox extends Actor implements RequestHandlerInterface {
 
     public function handle(Request $request): Response
     {
-        error_log($request->getBody());
-        $json = json_decode($request->getBody());
+        $body = $request->getBody();
+        $json = json_decode($body);
         $actor = null;
         if(is_string($json->actor)) {
             $actor = $json->actor;
@@ -76,18 +77,18 @@ class Inbox extends Actor implements RequestHandlerInterface {
                             $ship->save();
                         }
                         $content = json_encode([
-                            '@content' => 'https://www.w3.org/ns/activitystreams',
-                            'actor' => $object,
+                            '@context' => 'https://www.w3.org/ns/activitystreams',
+                            'actor' => $this->getActorLink($name),
                             'type' => 'Accept',
-                            'object' => $json
+                            'object' => $json,
+                            'id' => $this->getActorLink($name) . '#accept-' . gmdate('Y-m-d\TH:i:s\Z')
                         ]);
-
+                        
                         $sender->post($name, $content, $ship->inbox);
-                        error_log($content);
                         return new JsonResponse([
                             'type' => 'Accept',
                             'object' => $id
-                        ]);
+                        ], 206);
                     }
                 }
             }

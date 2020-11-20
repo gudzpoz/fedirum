@@ -41,7 +41,7 @@ class WebFinger implements RequestHandlerInterface
             else {
                 return new HtmlResponse('<h1>404 Not Found</h1>', 404);
             }
-	}
+        }
         else
         {
             return new HtmlResponse('<h1>Invalid Params! </h1>', 404);

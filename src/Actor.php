@@ -110,12 +110,12 @@ class Actor implements MiddlewareInterface {
                 ]);
             }
         } else if(preg_match('/\\/d\\/(\\d+)\\/(\\d+)/', $currentRoute, $match)) {
-            $post = $posts->findWhere([
+            $post = $this->posts->query()->where([
                 'discussion_id' => (int)$match[1],
                 'number' => (int)$match[2]
             ])->first();
             if($post) {
-                return new JsonResponse(Post::getPostObject($post), 200, [
+                return new JsonResponse(QueuedPost::getPostObject($post), 200, [
                     'Content-Type' => ['application/activity+json']
                 ]);
             }

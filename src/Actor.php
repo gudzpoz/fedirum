@@ -39,7 +39,7 @@ class Actor implements MiddlewareInterface {
         return Actor::getBaseLink() . Config::ACTOR_PATH . $username;
     }
     public static function getFollowersLink($username): string {
-        return $this->getActorLink($username) . '/followers';
+        return self::getActorLink($username) . '/followers';
     }
 
     private function getActorResponse($username): Response
@@ -55,7 +55,7 @@ class Actor implements MiddlewareInterface {
             'preferredUsername' => $username,
             'inbox' => Inbox::getInboxLink(),
             'outbox' => Outbox::getOutboxLink(),
-            'followers' => getFollowersLink($username),
+            'followers' => self::getFollowersLink($username),
             'url' => self::getActorLink($username),
             'publicKey' => array(
                 'id' => self::getActorLink($username) . '#main-key',

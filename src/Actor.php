@@ -11,6 +11,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Flarum\User\UserRepository;
 use Flarum\User\User;
+use Flarum\Post\PostRepository;
 
 class Actor implements MiddlewareInterface {
     public static function getBaseLink(): string {
@@ -28,8 +29,10 @@ class Actor implements MiddlewareInterface {
     
     private $user;
     protected $users;
-    public function __construct(UserRepository $repo) {
+    protected $posts;
+    public function __construct(UserRepository $repo, PostRepository $postRepo) {
         $this->users = $repo;
+        $this->posts = $postRepo;
     }
     protected function getInfo($username): ?User {
         $this->user = $this->users->findByIdentification($username);
@@ -73,7 +76,6 @@ class Actor implements MiddlewareInterface {
         if($headers && array_key_exists('accept', $headers)) {
             foreach($headers['accept'] as $accept) {
                 if(strpos($accept, 'application/activity+json') !== false
-                   || strpos($accept, 'application/json') !== false
                    || strpos($accept, 'application/ld+json; profile="https://www.w3.org/ns/activitystreams') !== false
                    || strpos($accept, 'application/ld+json') !== false) {
                     return TRUE;
@@ -86,6 +88,9 @@ class Actor implements MiddlewareInterface {
     
     public function process(Request $request, RequestHandlerInterface $handler): Response {
         $currentRoute = $request->getUri()->getPath();
+        if(!$this->isActivityRequest($request)) {
+            return $handler->handle($request);
+        }
 
         $userRoute = Config::ACTOR_PATH;
         if (substr($currentRoute, 0, strlen($userRoute)) === $userRoute) {
@@ -102,6 +107,16 @@ class Actor implements MiddlewareInterface {
                     "type" => "OrderedCollection"
                 ], 200, [
                     'Content-Type' => ['application/activity+json'],
+                ]);
+            }
+        } else if(preg_match('/\\/d\\/(\\d+)\\/(\\d+)/', $currentRoute, $match)) {
+            $post = $posts->findWhere([
+                'discussion_id' => (int)$match[1],
+                'number' => (int)$match[2]
+            ])->first();
+            if($post) {
+                return new JsonResponse(Post::getPostObject($post), 200, [
+                    'Content-Type' => ['application/activity+json']
                 ]);
             }
         }

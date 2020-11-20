@@ -3,21 +3,27 @@
 namespace Fedirum\Fedirum;
 
 use Flarum\Post\Event\Posted;
+use Illuminate\Bus\Queueable;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 
-return [
-    
-];
-
-class Post
+class QueuedPost implements ShouldQueue
 {
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    protected $event;
     public static function getPostLink($post) {
         return Actor::getBaseLink() . '/d/' . $post->discussionId . '#' . $post->id;
     }
     
-    public function __construct() {
+    public function __construct(Posted $event) {
+        $this->event = $event;
     }
 
-    public function handle(Posted $event) {
+    public function handle() {
+        $event = $this->event;
         $user = $event->actor;
         $post = $event->post;
         $contentSkim = '';
@@ -51,5 +57,11 @@ class Post
             }
         }
 
+    }
+}
+
+class Post  {
+    public function handle(Posted $event) {
+        QueuedPost::dispatch($event)
     }
 }

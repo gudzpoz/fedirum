@@ -3,19 +3,14 @@
 namespace Fedirum\Fedirum;
 
 use Flarum\Post\Event\Posted;
-use Illuminate\Bus\Queueable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
+use Flarum\Queue\AbstractJob;
+use Illuminate\Contracts\Queue\Factory;
 
-class QueuedPost implements ShouldQueue
+class QueuedPost extends AbstractJob
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
     protected $event;
     public static function getPostLink($post) {
-        return Actor::getBaseLink() . '/d/' . $post->discussionId . '#' . $post->id;
+        return Actor::getBaseLink() . '/d/' . $post->discussion_id . '/' . $post->number;
     }
     
     public function __construct(Posted $event) {
@@ -30,6 +25,15 @@ class QueuedPost implements ShouldQueue
         if($post->content) {
             $contentSkim = substr($post->content, 0, 500);
         }
+        $attachment = [];
+        preg_match_all('/\\!\\[([^\\[\\]\\n]*)\\]\\(([^()]+)\\)/', $post->content, $matches, PREG_SET_ORDER);
+        foreach($matches as $match) {
+            $attachment[] = [
+                'type' => 'Image',
+                'content' => $match[1],
+                'url' => $match[2]
+            ];
+        }
         $actorLink = Actor::getActorLink($user->username);
         $content = [
             '@context' => 'https://www.w3.org/ns/activitystreams',
@@ -42,6 +46,7 @@ class QueuedPost implements ShouldQueue
                 'id' => self::getPostLink($post),
                 'url' => self::getPostLink($post),
                 'type' => 'Note',
+                'attachment' => $attachment,
                 'published' => gmdate('Y-m-d\TH:i:s\Z'),
                 'attributedTo' => $actorLink,
                 'content' => $contentSkim,
@@ -60,8 +65,13 @@ class QueuedPost implements ShouldQueue
     }
 }
 
-class Post  {
+class Post {
+    protected $queue;
+    public function __construct(Factory $factory) {
+        $this->queue = $factory->connection('fedirum.posting');
+    }
+    
     public function handle(Posted $event) {
-        QueuedPost::dispatch($event)
+        $this->queue->push(new QueuedPost($event));
     }
 }

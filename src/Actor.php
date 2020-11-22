@@ -12,6 +12,8 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Flarum\User\UserRepository;
 use Flarum\User\User;
 use Flarum\Post\PostRepository;
+use Flarum\Tags\TagRepository;
+use Flarum\Tags\Tag;
 
 class Actor implements MiddlewareInterface {
     public static function getBaseLink(): string {
@@ -30,9 +32,11 @@ class Actor implements MiddlewareInterface {
     private $user;
     protected $users;
     protected $posts;
-    public function __construct(UserRepository $repo, PostRepository $postRepo) {
+    protected $tags;
+    public function __construct(UserRepository $repo, PostRepository $postRepo, TagRepository $tags) {
         $this->users = $repo;
         $this->posts = $postRepo;
+        $this->tags = $tags;
     }
     protected function getInfo($username): ?User {
         $this->user = $this->users->findByIdentification($username);
@@ -41,8 +45,51 @@ class Actor implements MiddlewareInterface {
     public static function getActorLink($username): string {
         return Actor::getBaseLink() . Config::ACTOR_PATH . $username;
     }
+    
+    public static function getTagLink($tagname): string {
+        return Actor::getBaseLink() . Config::TAG_PATH . $tagname;
+    }
+    
     public static function getFollowersLink($username): string {
         return self::getActorLink($username) . '/followers';
+    }
+
+    private function getTagResponse($tagname): Response {
+        $id = $this->tags->getIdForSlug($tagname);
+        $tag = null;
+        if(is_int($id)) {
+            try {
+                $tag = $this->tags->findOrFail($id);
+            } catch (Exception $e) {
+                return new HtmlResponse('<h1>No such tag.</h1>', 404);
+            }
+        } else {
+            return new HtmlResponse('<h1>No such tag.</h1>', 404);
+        }
+        
+        $send = new Send();
+        $data = array(
+            '@context' => array(
+                'https://www.w3.org/ns/activitystreams',
+            ),
+            'id' => $this->getTagLink($tagname),
+            'actor' => $this->getTagLink($tagname),
+            'type' => 'Group',
+            'name' => $tag->name,
+            'preferredUsername' => $tag->name,
+            'inbox' => Inbox::getInboxLink(),
+            'outbox' => Outbox::getOutboxLink(),
+            'followers' => this::getTagLink($tagname) . '/followers',
+            'url' => self::getTagLink($username),
+            'publicKey' => array(
+                'id' => self::getTagLink($username) . '#main-key',
+                'owner' => self::getTagLink($username),
+                'publicKeyPem' => $send->getPublicKey()
+            )
+        );
+        return new JsonResponse($data, 200, [
+            'Content-Type' => ['application/activity+json'],
+        ]);
     }
 
     private function getActorResponse($username): Response
@@ -93,7 +140,10 @@ class Actor implements MiddlewareInterface {
         }
 
         $userRoute = Config::ACTOR_PATH;
-        if (substr($currentRoute, 0, strlen($userRoute)) === $userRoute) {
+        if(substr($currentRoute, 0, strlen(Config::TAG_PATH)) === Config::TAG_PATH) {
+            $tag = substr($currentRoute, strlen($userRoute));
+            return $this->getTagResponse($tag);
+        } else if(substr($currentRoute, 0, strlen($userRoute)) === $userRoute) {
             $username = substr($currentRoute, strlen($userRoute));
             if(strpos($username, "/") === false && $this->getInfo($username)) {
                 return $this->getActorResponse($username);

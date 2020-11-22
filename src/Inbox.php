@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface;
 use GuzzleHttp\Psr7;
+use Flarum\Post\PostRepository;
 
 class Inbox extends Actor implements RequestHandlerInterface {
     public static function getInboxLink() {
@@ -46,7 +47,6 @@ class Inbox extends Actor implements RequestHandlerInterface {
         if(is_string($json->object)) {
             $object = $json->object;
         }
-
         if($json->type === 'Follow') {
             if($object && $actor && is_string($id)) {
                 $ship = new Followship();

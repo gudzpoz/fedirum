@@ -109,15 +109,18 @@ class Actor implements MiddlewareInterface {
                     'Content-Type' => ['application/activity+json'],
                 ]);
             }
-        } else if(preg_match('/\\/d\\/(\\d+)\\/(\\d+)/', $currentRoute, $match)) {
-            $post = $this->posts->query()->where([
-                'discussion_id' => (int)$match[1],
-                'number' => (int)$match[2]
-            ])->first();
-            if($post) {
-                return new JsonResponse(QueuedPost::getPostObject($post), 200, [
-                    'Content-Type' => ['application/activity+json']
-                ]);
+        } else {
+            $match = QueuedPost::parsePostPath($currentRoute);
+            if($match) {
+                $post = $this->posts->query()->where([
+                    'discussion_id' => $match[0],
+                    'number' => $match[1]
+                ])->first();
+                if($post) {
+                    return new JsonResponse(QueuedPost::getPostObject($post), 200, [
+                        'Content-Type' => ['application/activity+json']
+                    ]);
+                }
             }
         }
         return $handler->handle($request);

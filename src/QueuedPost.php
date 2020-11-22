@@ -4,17 +4,33 @@ namespace Fedirum\Fedirum;
 
 use Flarum\Post\Event\Posted;
 use Flarum\Queue\AbstractJob;
+use Parsedown;
 
 class QueuedPost extends AbstractJob
 {
     protected $event;
+    public static function getRelativePostLink($discussion, $number) {
+        return Actor::getBaseLink() . '/d/' . $discussion . '/' . $number;
+    }
     public static function getPostLink($post) {
         return Actor::getBaseLink() . '/d/' . $post->discussion_id . '/' . $post->number;
+    }
+    public static function parsePostPath($path) {
+        if(preg_match('/\\/d\\/(\\d+)(-[^\\/]+)?\\/?(\\d+)?\\/?/', $path, $match)) {
+            if(array_key_exists(3, $match)) {
+                return [(int)$match[1], (int)$match[3]];
+            } else {
+                return [(int)$match[1], 1];
+            }
+        } else {
+            return null;
+        }
     }
     public static function getPostObject($post) {
         $contentSkim = '';
         if($post->content) {
-            $contentSkim = substr($post->content, 0, 500);
+            $Parsedown = new Parsedown();
+            $contentSkim = $Parsedown->text($post->content);
         }
         $actorLink = Actor::getActorLink($post->user->username);
         $attachment = [];
@@ -26,13 +42,27 @@ class QueuedPost extends AbstractJob
                 'url' => $match[2]
             ];
         }
+        $parent = null;
+        if($post->number != 1) {
+            $parent = self::getRelativePostLink($post->discussion_id, $post->number - 1);
+        }
+        $child = null;
+        if($post->discussion->last_post_number > $post->number) {
+            $child = [
+                'type' => 'Collection',
+                'totalItems' => 1,
+                'items' => [self::getRelativePostLink($post->discussion_id, $post->number + 1)]
+            ];
+        }
         return [
             'id' => self::getPostLink($post),
             'url' => self::getPostLink($post),
             'type' => 'Note',
             'attachment' => $attachment,
-            'published' => gmdate('Y-m-d\TH:i:s\Z'),
+            'published' => $post->created_at->toIso8601String(),
             'attributedTo' => $actorLink,
+            'inReplyTo' => $parent,
+            'replies' => $child,
             'content' => $contentSkim,
             'to' => [$actorLink . '/followers'],
             'cc' => ['https://www.w3.org/ns/activitystreams#Public']

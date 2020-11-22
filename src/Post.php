@@ -4,14 +4,13 @@ namespace Fedirum\Fedirum;
 
 use Flarum\Post\Event\Posted;
 use Illuminate\Contracts\Queue\Factory;
+use Laminas\Diactoros\Response\EmptyResponse;
+use Illuminate\Contracts\Queue\Queue;
 
 class Post {
-    protected $queue;
-    public function __construct(Factory $factory) {
-        $this->queue = $factory->connection('fedirum.posting');
-    }
-    
     public function handle(Posted $event) {
-        $this->queue->push(new QueuedPost($event));
+        $queue = app(Queue::class);
+        $queue->push(new QueuedPost($event));
+        return new EmptyResponse(201);
     }
 }

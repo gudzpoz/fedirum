@@ -9,6 +9,9 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface;
 use GuzzleHttp\Psr7;
 use Flarum\Post\PostRepository;
+use Flarum\Notification\NotificationSyncer;
+use Fedirum\Fedirum\Notification\PostLikedBlueprint;
+use Fedirum\Fedirum\Notification\RemoteUser;
 
 class Inbox extends Actor implements RequestHandlerInterface {
     public static function getInboxLink() {
@@ -32,6 +35,11 @@ class Inbox extends Actor implements RequestHandlerInterface {
         return new JsonResponse($data);
     }
 
+    protected $notifications;
+    public function __construct(NotificationSyncer $notifications) {
+        $this->notifications = $notifications;
+    }
+
     public function handle(Request $request): Response
     {
         $body = $request->getBody();
@@ -47,7 +55,18 @@ class Inbox extends Actor implements RequestHandlerInterface {
         if(is_string($json->object)) {
             $object = $json->object;
         }
-        if($json->type === 'Follow') {
+        if($json->type === 'Like') {
+            $match = QueuedPost::parsePostPath($json->object);
+            $post = $this->posts->query()->where([
+                'discussion_id' => $match[0],
+                'number' => $match[2]
+            ])->first();
+            
+            $this->notifications->sync(
+                new PostLikedBlueprint($post, new RemoteUser($json->actor, $json->actor)),
+                [$post->user]
+            );
+        } else if($json->type === 'Follow') {
             if($object && $actor && is_string($id)) {
                 $ship = new Followship();
                 $ship->follower = $actor;

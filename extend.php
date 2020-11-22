@@ -8,9 +8,14 @@ use Fedirum\Fedirum\Outbox;
 use Fedirum\Fedirum\Post;
 use Fedirum\Fedirum\Actor;
 use Fedirum\Fedirum\Config;
+use Fedirum\Fedirum\Notification\PostLikedBlueprint;
 use Flarum\Post\Event\Posted;
 
 return [
+    (new Extend\Frontend('forum'))
+        ->js(__DIR__.'/js/dist/forum.js'),
+    (new Extend\Notification())
+        ->type(PostLikedBlueprint::class, PostSerializer::class, ['alert']),
     (new Extend\Frontend('forum'))
         ->content(function (Document $document) {
             $document->head[] = '<script>console.log("Hello, world!")</script>';

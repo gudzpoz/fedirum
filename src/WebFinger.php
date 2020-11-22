@@ -30,7 +30,7 @@ class WebFinger implements RequestHandlerInterface
         return new JsonResponse($data);
     }
 
-    private function getWebfingerResponse($resource, $username): Response
+    private function getWebfingerTag($resource, $username): Response
     {
         $data = array(
             'subject' => $resource,

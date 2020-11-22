@@ -9,17 +9,20 @@ use Fedirum\Fedirum\Post;
 use Fedirum\Fedirum\Actor;
 use Fedirum\Fedirum\Config;
 use Fedirum\Fedirum\Notification\PostLikedBlueprint;
+use Fedirum\Fedirum\Notification\PostLikedNotificationSender;
 use Flarum\Post\Event\Posted;
+use Illuminate\Contracts\Events\Dispatcher;
 
 return [
     (new Extend\Frontend('forum'))
         ->js(__DIR__.'/js/dist/forum.js'),
-    (new Extend\Notification())
-        ->type(PostLikedBlueprint::class, PostSerializer::class, ['alert']),
+    function (Dispatcher $events) {
+        $events->subscribe(PostLikedNotificationSender::class);
+    },
     (new Extend\Frontend('forum'))
         ->content(function (Document $document) {
             $document->head[] = '<script>console.log("Hello, world!")</script>';
-	}),
+    }),
     (new Extend\Routes('forum'))
         ->get('/.well-known/webfinger', 'fedirum.webfinger', WebFinger::class),
     (new Extend\Csrf())->exemptPath(Config::INBOX_PATH),

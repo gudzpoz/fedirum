@@ -30,6 +30,10 @@ class PostLikedBlueprint implements BlueprintInterface
         ];
     }
 
+    public function getFromUser() {
+        return null;
+    }
+
     public static function getType() {
         return 'postRemoteLiked';
     }

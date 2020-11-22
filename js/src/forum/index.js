@@ -6,8 +6,8 @@ import NotificationGrid from 'flarum/components/NotificationGrid';
 
 import PostLikedNotification from './components/PostLikedNotification';
 
-app.initializers.add('flarum-likes', () => {
-  app.notificationComponents.postLiked = PostLikedNotification;
+app.initializers.add('fedirum-likes', () => {
+  app.notificationComponents.postRemoteLiked = PostLikedNotification;
 
   extend(NotificationGrid.prototype, 'notificationTypes', function (items) {
     items.add('postRemoteLiked', {

@@ -12,12 +12,11 @@ export default class PostLikedNotification extends Notification {
 
   content() {
     const notification = this.attrs.notification;
-    const user = notification.content().username;
 
-    return user + 'Liked your post.';
+    return 'A remote user liked your post.';
   }
 
   excerpt() {
-    return truncate(this.attrs.notification.subject().contentPlain(), 200);
+    return 'From: ' + this.attrs.notification.content().url;
   }
 }

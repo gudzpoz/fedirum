@@ -7,7 +7,7 @@
  * LICENSE file that was distributed with this source code.
  */
 
-namespace Fedirum\Fedirum\Notification;f
+namespace Fedirum\Fedirum\Notification;
 
 use Flarum\Api\Serializer\PostSerializer;
 use Flarum\Event\ConfigureNotificationTypes;

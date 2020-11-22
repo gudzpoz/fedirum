@@ -36,8 +36,10 @@ class Inbox extends Actor implements RequestHandlerInterface {
     }
 
     protected $notifications;
-    public function __construct(NotificationSyncer $notifications) {
+    protected $posts;
+    public function __construct(NotificationSyncer $notifications, PostRepository $posts) {
         $this->notifications = $notifications;
+        $this->posts = $posts;        
     }
 
     public function handle(Request $request): Response
@@ -59,7 +61,7 @@ class Inbox extends Actor implements RequestHandlerInterface {
             $match = QueuedPost::parsePostPath($json->object);
             $post = $this->posts->query()->where([
                 'discussion_id' => $match[0],
-                'number' => $match[2]
+                'number' => $match[1]
             ])->first();
             
             $this->notifications->sync(

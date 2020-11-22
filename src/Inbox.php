@@ -58,6 +58,10 @@ class Inbox extends Actor implements RequestHandlerInterface {
             $object = $json->object;
         }
         if($json->type === 'Like') {
+            $sender = new Send();
+            if(!$sender->verify($request)) {
+                return new HtmlResponse('<h1>Illegal Authentication.</h1>');
+            }
             $match = QueuedPost::parsePostPath($json->object);
             $post = $this->posts->query()->where([
                 'discussion_id' => $match[0],
@@ -68,6 +72,11 @@ class Inbox extends Actor implements RequestHandlerInterface {
                 new PostLikedBlueprint($post, new RemoteUser($json->actor, $json->actor)),
                 [$post->user]
             );
+            
+            return new JsonResponse([
+                'type' => 'Accept',
+                'object' => $id
+            ], 206);
         } else if($json->type === 'Follow') {
             if($object && $actor && is_string($id)) {
                 $ship = new Followship();

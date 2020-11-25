@@ -94,7 +94,20 @@ class Actor implements MiddlewareInterface {
 
     private function getActorResponse($username): Response
     {
+        $user = $this->getInfo($username);
+        if(!$user) {
+            return new HtmlResponse('<h1>No user found.</h1>', 404);
+        }
+        
         $send = new Send();
+
+        $icon = null;
+        if($user->avatar_url) {
+            $icon = [
+                'type' => 'Image',
+                'url' => $user->avatar_url
+            ];
+        }
         $data = array(
             '@context' => array(
                 'https://www.w3.org/ns/activitystreams',
@@ -102,6 +115,8 @@ class Actor implements MiddlewareInterface {
             'id' => $this->getActorLink($username),
             'actor' => $this->getActorLink($username),
             'type' => 'Person',
+            'name' => $user->display_name,
+            'icon' => $icon,
             'preferredUsername' => $username,
             'inbox' => Inbox::getInboxLink(),
             'outbox' => Outbox::getOutboxLink(),

@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\Queue;
 
 class Post {
     public function handle(Posted $event) {
-        $queue = app(Queue::class);
+        $queue = app('flarum.queue.connection');
         $queue->push(new QueuedPost($event));
         return new EmptyResponse(201);
     }

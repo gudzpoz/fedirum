@@ -3,7 +3,7 @@ import app from 'flarum/app';
 import Post from 'flarum/models/Post';
 import Model from 'flarum/Model';
 import NotificationGrid from 'flarum/components/NotificationGrid';
-
+import UserCard from 'flarum/components/UserCard';
 import PostLikedNotification from './components/PostLikedNotification';
 
 app.initializers.add('fedirum-likes', () => {
@@ -16,4 +16,8 @@ app.initializers.add('fedirum-likes', () => {
       label: app.translator.trans('flarum-likes.forum.settings.notify_post_liked_label')
     });
   });
+});
+
+extend(UserCard.prototype, 'infoItems', function(items) {
+  items.add('actorId', '@' + this.attrs.user.username + '@' + document.location.hostname);
 });

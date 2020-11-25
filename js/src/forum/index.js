@@ -19,5 +19,6 @@ app.initializers.add('fedirum-likes', () => {
 });
 
 extend(UserCard.prototype, 'infoItems', function(items) {
-  items.add('actorId', '@' + this.attrs.user.username + '@' + document.location.hostname);
+  var actor = '@' + this.attrs.user.username() + '@' + document.location.hostname;
+  items.add('actorId', <div>{actor}</div>);
 });

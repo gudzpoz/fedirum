@@ -8,9 +8,11 @@ use Fedirum\Fedirum\Outbox;
 use Fedirum\Fedirum\Post;
 use Fedirum\Fedirum\Actor;
 use Fedirum\Fedirum\Config;
+use Fedirum\Fedirum\FrontendSettings;
 use Fedirum\Fedirum\Notification\PostLikedBlueprint;
 use Fedirum\Fedirum\Notification\PostLikedNotificationSender;
 use Flarum\Post\Event\Posted;
+use Flarum\Api\Event\Serializing;
 use Illuminate\Contracts\Events\Dispatcher;
 
 return [
@@ -23,6 +25,7 @@ return [
         ->content(function (Document $document) {
             $document->head[] = '<script>console.log("Hello, world!")</script>';
     }),
+    (new Extend\Event)->listen(Serializing::class, FrontendSettings::class),
     (new Extend\Routes('forum'))
         ->get('/.well-known/webfinger', 'fedirum.webfinger', WebFinger::class),
     (new Extend\Csrf())->exemptPath(Config::INBOX_PATH),

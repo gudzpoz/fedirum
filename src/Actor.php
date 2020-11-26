@@ -72,18 +72,18 @@ class Actor implements MiddlewareInterface {
             '@context' => array(
                 'https://www.w3.org/ns/activitystreams',
             ),
-            'id' => $this->getTagLink($tagname),
-            'actor' => $this->getTagLink($tagname),
+            'id' => self::getTagLink($tagname),
+            'actor' => self::getTagLink($tagname),
             'type' => 'Group',
             'name' => $tag->name,
-            'preferredUsername' => $tag->name,
+            'preferredUsername' => Config::TAG_ACTOR_PREFIX . $tag->slug,
             'inbox' => Inbox::getInboxLink(),
             'outbox' => Outbox::getOutboxLink(),
-            'followers' => this::getTagLink($tagname) . '/followers',
-            'url' => self::getTagLink($username),
+            'followers' => self::getTagLink($tagname) . '/followers',
+            'url' => self::getTagLink($tagname),
             'publicKey' => array(
-                'id' => self::getTagLink($username) . '#main-key',
-                'owner' => self::getTagLink($username),
+                'id' => self::getTagLink($tagname) . '#main-key',
+                'owner' => self::getTagLink($tagname),
                 'publicKeyPem' => $send->getPublicKey()
             )
         );

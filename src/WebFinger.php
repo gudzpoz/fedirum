@@ -56,8 +56,8 @@ class WebFinger implements RequestHandlerInterface
         if(preg_match('/^acct:([^@]+)(@.+)$/i', $resource, $matches))
         {
             if($matches[2] == '@' . $_SERVER['SERVER_NAME']) {
-                if($matches[1][0] === '!') {
-                    return $this->getWebfingerTag($resource, substr($matches[1], 1));
+                if(substr($matches[1], 0, strlen(Config::TAG_ACTOR_PREFIX)) === Config::TAG_ACTOR_PREFIX) {
+                    return $this->getWebfingerTag($resource, substr($matches[1], strlen(Config::TAG_ACTOR_PREFIX)));
                 } else {
                     return $this->getWebfingerResponse($resource, $matches[1]);
                 }
